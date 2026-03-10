@@ -1,0 +1,91 @@
+# zyrthi-platform-esp32
+# ESP32 系列芯片平台配置
+
+platform: esp32
+description: Espressif ESP32 系列
+vendor: espressif
+version: "1.0.0"
+
+# 编译配置
+compiler:
+  default_cflags:
+    - -Os
+    - -Wall
+  default_ldflags: []
+
+# 烧录配置
+flash:
+  default_baud: 115200
+  max_baud: 921600
+
+# 芯片变体
+chips:
+  esp32:
+    core: xtensa
+    flash_size: 4MB
+    ram_size: 520KB
+    compiler:
+      prefix: xtensa-esp32-elf-
+      cflags:
+        - -mlongcalls
+    flash:
+      plugin: https://github.com/zyrthi-io/zyrthi-platform-esp32/releases/download/v1.0.0/esp32-flash.wasm
+      entry_addr: 0x1000
+
+  esp32s2:
+    core: xtensa
+    flash_size: 4MB
+    ram_size: 320KB
+    compiler:
+      prefix: xtensa-esp32s2-elf-
+      cflags:
+        - -mlongcalls
+    flash:
+      plugin: https://github.com/zyrthi-io/zyrthi-platform-esp32/releases/download/v1.0.0/esp32-flash.wasm
+      entry_addr: 0x1000
+
+  esp32s3:
+    core: xtensa
+    flash_size: 8MB
+    ram_size: 512KB
+    psram: true
+    compiler:
+      prefix: xtensa-esp32s3-elf-
+      cflags:
+        - -mlongcalls
+    flash:
+      plugin: https://github.com/zyrthi-io/zyrthi-platform-esp32/releases/download/v1.0.0/esp32-flash.wasm
+      entry_addr: 0x0
+
+  esp32c3:
+    core: riscv
+    flash_size: 4MB
+    ram_size: 400KB
+    compiler:
+      prefix: riscv32-esp-elf-
+      cflags: []
+    flash:
+      plugin: https://github.com/zyrthi-io/zyrthi-platform-esp32/releases/download/v1.0.0/esp32-flash.wasm
+      entry_addr: 0x0
+
+  esp32c6:
+    core: riscv
+    flash_size: 4MB
+    ram_size: 512KB
+    compiler:
+      prefix: riscv32-esp-elf-
+      cflags: []
+    flash:
+      plugin: https://github.com/zyrthi-io/zyrthi-platform-esp32/releases/download/v1.0.0/esp32-flash.wasm
+      entry_addr: 0x0
+
+  esp32h2:
+    core: riscv
+    flash_size: 4MB
+    ram_size: 256KB
+    compiler:
+      prefix: riscv32-esp-elf-
+      cflags: []
+    flash:
+      plugin: https://github.com/zyrthi-io/zyrthi-platform-esp32/releases/download/v1.0.0/esp32-flash.wasm
+      entry_addr: 0x0
