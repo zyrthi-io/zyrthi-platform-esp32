@@ -16,8 +16,10 @@ ESP32 系列芯片平台配置与烧录插件。
 ```
 zyrthi-platform-esp32/
 ├── platform.yaml      # 平台配置
-├── plugin/            # 烧录插件源码
-│   ├── main.go        # TinyGo 实现
+├── plugin/            # 烧录插件源码（标准 Go WASM）
+│   ├── protocol.go    # 协议层（可测试）
+│   ├── protocol_test.go
+│   ├── main_wasm.go   # WASM 入口
 │   └── Makefile
 ├── releases/          # 编译产物（GitHub Release）
 └── README.md
@@ -31,7 +33,7 @@ zyrthi platform install esp32
 
 ## 编译插件
 
-需要 TinyGo：
+使用标准 Go 1.24+：
 
 ```bash
 cd plugin
@@ -40,7 +42,7 @@ make
 
 ## 发布
 
-1. 编译插件
+1. 编译插件：`make`
 2. 创建 GitHub Release
 3. 上传 `esp32-flash.wasm`
 4. 更新 `platform.yaml` 中的插件 URL
