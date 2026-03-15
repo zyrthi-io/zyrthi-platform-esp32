@@ -347,11 +347,33 @@ func TestConstants(t *testing.T) {
 		t.Errorf("expected PageSize 0x100, got 0x%04X", PageSize)
 	}
 
-	// 验证命令常量
+	// 验证命令常量（参考 ESP32 ROM bootloader 协议规范）
+	// https://docs.espressif.com/projects/esptool/en/latest/esp32/advanced-topics/serial-protocol.html
 	if cmdSync != 0x08 {
 		t.Errorf("expected cmdSync 0x08, got 0x%02X", cmdSync)
 	}
-	if cmdFlashBegin != 0x0B {
-		t.Errorf("expected cmdFlashBegin 0x0B, got 0x%02X", cmdFlashBegin)
+	if cmdFlashBegin != 0x02 {
+		t.Errorf("expected cmdFlashBegin 0x02, got 0x%02X", cmdFlashBegin)
+	}
+	if cmdFlashData != 0x03 {
+		t.Errorf("expected cmdFlashData 0x03, got 0x%02X", cmdFlashData)
+	}
+	if cmdFlashEnd != 0x04 {
+		t.Errorf("expected cmdFlashEnd 0x04, got 0x%02X", cmdFlashEnd)
+	}
+	if cmdSpiSetParams != 0x0B {
+		t.Errorf("expected cmdSpiSetParams 0x0B, got 0x%02X", cmdSpiSetParams)
+	}
+	if cmdChangeBaud != 0x0F {
+		t.Errorf("expected cmdChangeBaud 0x0F, got 0x%02X", cmdChangeBaud)
+	}
+	if cmdFlashMd5 != 0x13 {
+		t.Errorf("expected cmdFlashMd5 0x13, got 0x%02X", cmdFlashMd5)
+	}
+	if cmdEraseFlash != 0xD0 {
+		t.Errorf("expected cmdEraseFlash 0xD0, got 0x%02X", cmdEraseFlash)
+	}
+	if cmdReadFlash != 0xD2 {
+		t.Errorf("expected cmdReadFlash 0xD2, got 0x%02X", cmdReadFlash)
 	}
 }
