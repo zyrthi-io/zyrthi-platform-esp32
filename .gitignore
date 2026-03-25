@@ -33,3 +33,11 @@ Thumbs.db
 # Build artifacts
 plugin/coverage.out
 plugin/*.wasm
+
+# Container images
+archives/
+dist/
+Containerfile.dev
+Containerfile.idf
+Containerfile.idf-slim
+test/
