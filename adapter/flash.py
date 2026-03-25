@@ -2,14 +2,18 @@
 """
 zyrthi flash 适配器
 读取 stdin JSON 请求，执行烧录，输出 JSON 响应
+
+架构:
+  CLI (Go) --stdin JSON--> flash.py --调用--> esptool.py --pyserial--> 串口
 """
 
 import json
-import os
+import glob
+import platform
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 
 # 芯片配置
 CHIP_CONFIG = {
@@ -41,17 +45,27 @@ CHIP_CONFIG = {
 
 
 def find_serial_port() -> Optional[str]:
-    """自动查找串口"""
-    import glob
+    """自动查找串口设备"""
+    system = platform.system()
     
-    # 常见串口模式
-    patterns = [
-        '/dev/ttyUSB*',
-        '/dev/ttyACM*',
-        '/dev/cu.usbserial*',
-        '/dev/cu.SLAB_USBtoUART*',
-        '/dev/cu.wchusbserial*',
-    ]
+    if system == 'Linux':
+        patterns = ['/dev/ttyUSB*', '/dev/ttyACM*']
+    elif system == 'Darwin':  # macOS
+        patterns = ['/dev/cu.usb*', '/dev/cu.wch*', '/dev/cu.SLAB_USBtoUART*']
+    elif system == 'Windows':
+        # Windows 下尝试 COM1-COM20
+        for i in range(1, 21):
+            port = f'COM{i}'
+            try:
+                import serial
+                ser = serial.Serial(port)
+                ser.close()
+                return port
+            except:
+                continue
+        return None
+    else:
+        patterns = ['/dev/ttyUSB*', '/dev/ttyACM*']
     
     for pattern in patterns:
         ports = glob.glob(pattern)
@@ -66,7 +80,7 @@ def flash(req: dict) -> dict:
     chip = req.get('chip', 'esp32c3')
     port = req.get('port', '')
     baud = req.get('baud', 921600)
-    firmware = req.get('firmware', '/src/build/app.elf')
+    firmware = req.get('firmware', 'build/app.bin')
     erase = req.get('erase', False)
     verify = req.get('verify', False)
     
@@ -80,7 +94,6 @@ def flash(req: dict) -> dict:
         bin_path = firmware_path.with_suffix('.bin')
         if bin_path.exists():
             firmware = str(bin_path)
-            firmware_path = bin_path
         else:
             return {
                 'success': False,
@@ -96,24 +109,28 @@ def flash(req: dict) -> dict:
                 'error': '未找到串口设备',
             }
     
-    # 构建 esptool 命令
-    cmd = [
-        'esptool.py',
-        '--chip', config['chip_flag'],
-        '--port', port,
-        '--baud', str(baud),
-    ]
-    
     # 擦除
     if erase:
-        cmd.append('erase_flash')
+        erase_cmd = [
+            'esptool.py',
+            '--chip', config['chip_flag'],
+            '--port', port,
+            '--baud', str(baud),
+            'erase_flash',
+        ]
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            print(f"擦除: {' '.join(erase_cmd)}", file=sys.stderr)
+            result = subprocess.run(erase_cmd, capture_output=True, text=True)
             if result.returncode != 0:
                 return {
                     'success': False,
                     'error': f'擦除失败: {result.stderr}',
                 }
+        except FileNotFoundError:
+            return {
+                'success': False,
+                'error': 'esptool.py 未安装，请运行: pip install esptool',
+            }
         except Exception as e:
             return {
                 'success': False,
@@ -126,13 +143,16 @@ def flash(req: dict) -> dict:
         '--chip', config['chip_flag'],
         '--port', port,
         '--baud', str(baud),
-        'write_flash',
-        config['entry_addr'],
-        firmware,
     ]
     
     if verify:
-        cmd.insert(1, '--verify')
+        cmd.append('--verify')
+    
+    cmd.extend([
+        'write_flash',
+        config['entry_addr'],
+        firmware,
+    ])
     
     try:
         print(f"烧录: {' '.join(cmd)}", file=sys.stderr)
@@ -149,8 +169,14 @@ def flash(req: dict) -> dict:
             'success': True,
             'port': port,
             'chip': chip,
+            'firmware': firmware,
         }
         
+    except FileNotFoundError:
+        return {
+            'success': False,
+            'error': 'esptool.py 未安装，请运行: pip install esptool',
+        }
     except Exception as e:
         return {
             'success': False,
